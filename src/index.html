@@ -2,31 +2,25 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Serverless To-Do TEST</title>
+  <title>Serverless To-Do App</title>
 </head>
 <body>
   <h1>Serverless To-Do App</h1>
 
-  <div>
-    <input id="newTodo" placeholder="Neues To-Do..." />
-    <button onclick="addTodo()">Hinzufügen</button>
-    <button onclick="loadTodos()">To-Dos laden</button>
-  </div>
+  <input id="newTodo" placeholder="Neues To-Do..." />
+  <button onclick="addTodo()">Hinzufügen</button>
 
   <ul id="todoList"></ul>
 
   <script>
-    // Hier merken wir uns alle Todos (nur im Browser)
     let todos = [];
 
-    // 1) Todos vom Server holen
     async function loadTodos() {
       const res = await fetch("/api/todos");
       todos = await res.json();
       render();
     }
 
-    // 2) Neues Todo hinzufügen
     async function addTodo() {
       const input = document.getElementById("newTodo");
       const text = input.value.trim();
@@ -35,94 +29,41 @@
       const res = await fetch("/api/todos", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text })
+        body: JSON.stringify({ text }),
       });
 
-      const created = await res.json();
-      todos.unshift(created);   // nur im Browser
+      const todo = await res.json();
+      todos.push(todo);
       input.value = "";
       render();
     }
 
-    // 3) Todo abhaken / zurücksetzen
-    async function toggleTodo(id) {
-      const t = todos.find(x => x.id === id);
-      if (!t) return;
-
-      t.done = !t.done;   // nur im Browser
-      render();
-
-      await fetch(`/api/todos/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ done: t.done })
-      });
-    }
-
-    // 4) Todo bearbeiten
-    async function editTodo(id) {
-      const t = todos.find(x => x.id === id);
-      if (!t) return;
-
-      const newText = prompt("Neuer Text:", t.text);
-      if (newText === null) return;
-
-      t.text = newText;
-      render();
-
-      await fetch(`/api/todos/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: newText })
-      });
-    }
-
-    // 5) Todo löschen
     async function deleteTodo(id) {
-      todos = todos.filter(x => x.id !== id);
+      todos = todos.filter(t => t.id !== id);
       render();
 
-      await fetch(`/api/todos/${id}`, {
-        method: "DELETE"
-      });
+      await fetch(`/api/todos/${id}`, { method: "DELETE" });
     }
 
-    // 6) ALLES neu zeichnen (DAS ist render)
     function render() {
-      const list = document.getElementById("todoList");
-      list.innerHTML = "";   // alte Liste löschen
+      const ul = document.getElementById("todoList");
+      ul.innerHTML = "";
 
-      todos.forEach(todo => {
+      todos.forEach(t => {
         const li = document.createElement("li");
+        li.textContent = t.text + " ";
 
-        // Checkbox
-        const cb = document.createElement("input");
-        cb.type = "checkbox";
-        cb.checked = todo.done;
-        cb.onchange = () => toggleTodo(todo.id);
+        const btn = document.createElement("button");
+        btn.textContent = "Löschen";
+        btn.onclick = () => deleteTodo(t.id);
 
-        // Text
-        const span = document.createElement("span");
-        span.textContent = " " + todo.text + " ";
-
-        // Bearbeiten-Button
-        const editBtn = document.createElement("button");
-        editBtn.textContent = "Bearbeiten";
-        editBtn.onclick = () => editTodo(todo.id);
-
-        // Löschen-Button
-        const delBtn = document.createElement("button");
-        delBtn.textContent = "Löschen";
-        delBtn.onclick = () => deleteTodo(todo.id);
-
-        li.appendChild(cb);
-        li.appendChild(span);
-        li.appendChild(editBtn);
-        li.appendChild(delBtn);
-
-        list.appendChild(li);
+        li.appendChild(btn);
+        ul.appendChild(li);
       });
     }
+
+    // Start leer
+    loadTodos();
   </script>
 </body>
 </html>
