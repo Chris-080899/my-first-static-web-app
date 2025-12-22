@@ -2,12 +2,24 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Azure Static Web App</title>
+  <title>Serverless Web-Anwendung</title>
 </head>
-
 <body>
-  <h1>Meine Azure Static Web App</h1>
-  <p>Erfolgreich deployed.</p>
-</body>
+  <h1>Serverless Web-Anwendung</h1>
 
+  <p>Name eingeben:</p>
+  <input type="text" id="name" placeholder="Christopher" />
+  <button onclick="callApi()">API aufrufen</button>
+
+  <p id="result"></p>
+
+  <script>
+    async function callApi() {
+      const name = document.getElementById("name").value || "Gast";
+      const response = await fetch(`/api/hello?name=${encodeURIComponent(name)}`);
+      const data = await response.json();
+      document.getElementById("result").innerText = data.message;
+    }
+  </script>
+</body>
 </html>
